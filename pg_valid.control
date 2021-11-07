@@ -1,0 +1,4 @@
+comment = 'pg_valid: extended postgresql validation'
+default_version = '1.0'
+module_pathname = '$libdir/pg_valid'
+relocatable = true

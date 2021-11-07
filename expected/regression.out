@@ -1,0 +1,363 @@
+--
+-- Copyright (c) 2008-2021 Yuriy Yarosh
+--
+CREATE
+EXTENSION pg_valid;
+SELECT not_blank('abc');
+ not_blank 
+-----------
+ t
+(1 row)
+
+SELECT not_blank('abc ');
+ not_blank 
+-----------
+ t
+(1 row)
+
+SELECT not_blank(' abc');
+ not_blank 
+-----------
+ t
+(1 row)
+
+SELECT not_blank('åbc');
+ not_blank 
+-----------
+ t
+(1 row)
+
+SELECT not_blank('åbc ');
+ not_blank 
+-----------
+ t
+(1 row)
+
+SELECT not_blank(' åbc');
+ not_blank 
+-----------
+ t
+(1 row)
+
+SELECT not_blank('');
+ not_blank 
+-----------
+ f
+(1 row)
+
+SELECT '|' || trim_ws_extra(' a1    ', false) || '|';
+ ?column? 
+----------
+ |a1|
+(1 row)
+
+SELECT '|' || trim_ws_extra('       ', false) || '|';
+ ?column? 
+----------
+ ||
+(1 row)
+
+SELECT '|' || trim_ws_extra('1       ', false) || '|';
+ ?column? 
+----------
+ |1|
+(1 row)
+
+SELECT '|' || trim_ws_extra('       1', false) || '|';
+ ?column? 
+----------
+ |1|
+(1 row)
+
+SELECT '|' || trim_ws_extra('       1a', false) || '|';
+ ?column? 
+----------
+ |1a|
+(1 row)
+
+SELECT '|' || trim_ws_extra(' a1bc   ', false) || '|';
+ ?column? 
+----------
+ |a1bc|
+(1 row)
+
+SELECT '|' || trim_ws_extra(' a1    ', true) || '|';
+ ?column? 
+----------
+ |a1|
+(1 row)
+
+SELECT '|' || trim_ws_extra('       ', true) || '|';
+ ?column? 
+----------
+ ||
+(1 row)
+
+SELECT '|' || trim_ws_extra('a       ', true) || '|';
+ ?column? 
+----------
+ |a|
+(1 row)
+
+SELECT '|' || trim_ws_extra('       1', true) || '|';
+ ?column? 
+----------
+ |1|
+(1 row)
+
+SELECT '|' || trim_ws_extra('       1a', true) || '|';
+ ?column? 
+----------
+ |1a|
+(1 row)
+
+SELECT '|' || trim_ws_extra(' a1bc   ', true) || '|';
+ ?column? 
+----------
+ |a1bc|
+(1 row)
+
+SELECT '|' || trim_ws_extra(' å1bc   ', true) || '|';
+ ?column? 
+----------
+ |å1bc|
+(1 row)
+
+SELECT '|' || trim_ws_extra('å1bc   ', true) || '|';
+ ?column? 
+----------
+ |å1bc|
+(1 row)
+
+SELECT is_num('123');
+ is_num 
+--------
+ t
+(1 row)
+
+SELECT is_alpha('abc');
+ is_alpha 
+----------
+ t
+(1 row)
+
+SELECT is_alpha('åbc');
+ is_alpha 
+----------
+ t
+(1 row)
+
+SELECT is_alnum('abc1');
+ is_alnum 
+----------
+ t
+(1 row)
+
+SELECT is_alnum('åbc1');
+ is_alnum 
+----------
+ t
+(1 row)
+
+SELECT is_alnum('1abc1');
+ is_alnum 
+----------
+ t
+(1 row)
+
+SELECT is_alnum('1åbc1');
+ is_alnum 
+----------
+ t
+(1 row)
+
+SELECT is_alnum_extra('1åbc1\ ', ' ');
+ is_alnum_extra 
+----------------
+ f
+(1 row)
+
+SELECT is_alnum_extra('1åbc1\ ', ' \');
+ is_alnum_extra 
+----------------
+ t
+(1 row)
+
+SELECT is_alpha_extra('åbc\ ', ' ');
+ is_alpha_extra 
+----------------
+ f
+(1 row)
+
+SELECT is_alpha_extra('åbc\ ', ' \');
+ is_alpha_extra 
+----------------
+ t
+(1 row)
+
+SELECT is_num_extra('123\ ', ' ');
+ is_num_extra 
+--------------
+ t
+(1 row)
+
+SELECT is_num_extra('123\ ', ' \');
+ is_num_extra 
+--------------
+ t
+(1 row)
+
+SELECT is_email('test@email.com');
+ is_email 
+----------
+ t
+(1 row)
+
+SELECT is_email('test@email.com ');
+ is_email 
+----------
+ f
+(1 row)
+
+SELECT is_email('test@z.com');
+ is_email 
+----------
+ t
+(1 row)
+
+SELECT is_email('test@z.co');
+ is_email 
+----------
+ f
+(1 row)
+
+SELECT is_html_escaped('<script>');
+ is_html_escaped 
+-----------------
+ f
+(1 row)
+
+SELECT is_html_escaped('&lt;script&gt;');
+ is_html_escaped 
+-----------------
+ t
+(1 row)
+
+SELECT pgvalid_create_validated_domain('test_domain');
+ pgvalid_create_validated_domain 
+---------------------------------
+ 
+(1 row)
+
+SELECT *
+FROM registered_domains;
+    name     | schema | not_blank | html_escaped | is_num | is_alpha | is_alnum | is_email | regex | min_length | max_length | min | max |  type   | numeric_prec_int | numeric_prec_frac | char_length 
+-------------+--------+-----------+--------------+--------+----------+----------+----------+-------+------------+------------+-----+-----+---------+------------------+-------------------+-------------
+ test_domain | public | t         | t            | f      | f        | f        | f        |       |          3 |         64 |  -1 |  -1 | VARCHAR |               -1 |                -1 |          64
+(1 row)
+
+SELECT pgvalid_drop_validated_domain('test_domain');
+ pgvalid_drop_validated_domain 
+-------------------------------
+ 
+(1 row)
+
+SELECT *
+FROM registered_domains;
+ name | schema | not_blank | html_escaped | is_num | is_alpha | is_alnum | is_email | regex | min_length | max_length | min | max | type | numeric_prec_int | numeric_prec_frac | char_length 
+------+--------+-----------+--------------+--------+----------+----------+----------+-------+------------+------------+-----+-----+------+------------------+-------------------+-------------
+(0 rows)
+
+SELECT *
+FROM pg_tables
+WHERE tablename = 'registered_domains';
+ schemaname |     tablename      | tableowner | tablespace | hasindexes | hasrules | hastriggers | rowsecurity 
+------------+--------------------+------------+------------+------------+----------+-------------+-------------
+ public     | registered_domains | postgres   |            | t          | f        | f           | f
+(1 row)
+
+SELECT pgvalid_create_validated_domain('test_domain');
+NOTICE:  relation "registered_domains" already exists, skipping
+ pgvalid_create_validated_domain 
+---------------------------------
+ 
+(1 row)
+
+SELECT *
+FROM registered_domains;
+    name     | schema | not_blank | html_escaped | is_num | is_alpha | is_alnum | is_email | regex | min_length | max_length | min | max |  type   | numeric_prec_int | numeric_prec_frac | char_length 
+-------------+--------+-----------+--------------+--------+----------+----------+----------+-------+------------+------------+-----+-----+---------+------------------+-------------------+-------------
+ test_domain | public | t         | t            | f      | f        | f        | f        |       |          3 |         64 |  -1 |  -1 | VARCHAR |               -1 |                -1 |          64
+(1 row)
+
+SELECT pgvalid_create_validated_domain("name" => 'age',
+                                       "type" => 'INT',
+                                       min => 18,
+                                       dump_query => true
+           );
+NOTICE:  relation "registered_domains" already exists, skipping
+INFO:  RESULT QUERY:\nCREATE DOMAIN public.age AS INT  CONSTRAINT age_min CHECK (VALUE > 18) ;
+INFO:  RESULT INSERT QUERY:\nINSERT INTO public.registered_domains VALUES ('age', 'public', 't', 't', 'f', 'f', 'f', 'f', '', -1, -1, 18, -1, 'INT', -1, -1, 64);
+ pgvalid_create_validated_domain 
+---------------------------------
+ 
+(1 row)
+
+SELECT pgvalid_create_validated_domain("name" => 'email',
+                                       not_blank => true,
+                                       is_email => true,
+                                       min_length => 3,
+                                       dump_query => true
+           );
+NOTICE:  relation "registered_domains" already exists, skipping
+INFO:  RESULT QUERY:\nCREATE DOMAIN public.email AS VARCHAR(64)  CONSTRAINT email_not_blank CHECK (length(trim_ws(VALUE)) > 0)  CONSTRAINT email_html_escaped CHECK (is_html_escaped(trim_ws(VALUE)))  CONSTRAINT email_is_enum CHECK (is_email(trim_ws(VALUE)))  CONSTRAINT email_too_short CHECK (char_length(trim_ws(VALUE)) > 3)  CONSTRAINT email_too_long CHECK (char_length(trim_ws(VALUE)) < 64) ;
+INFO:  RESULT INSERT QUERY:\nINSERT INTO public.registered_domains VALUES ('email', 'public', 't', 't', 'f', 'f', 'f', 't', '', 3, 64, -1, -1, 'VARCHAR', -1, -1, 64);
+ pgvalid_create_validated_domain 
+---------------------------------
+ 
+(1 row)
+
+SELECT pgvalid_create_validated_domain("name" => 'currency',
+                                       "type" => 'numeric',
+                                       min => 18,
+                                       numeric_prec_int => 8,
+                                       numeric_prec_frac => 5,
+                                       dump_query => true
+           );
+NOTICE:  relation "registered_domains" already exists, skipping
+INFO:  RESULT QUERY:\nCREATE DOMAIN public.currency AS NUMERIC(8, 5)  CONSTRAINT currency_min CHECK (VALUE > 18) ;
+INFO:  RESULT INSERT QUERY:\nINSERT INTO public.registered_domains VALUES ('currency', 'public', 't', 't', 'f', 'f', 'f', 'f', '', -1, -1, 18, -1, 'NUMERIC', 8, 5, 64);
+ pgvalid_create_validated_domain 
+---------------------------------
+ 
+(1 row)
+
+SELECT pgvalid_create_validated_domain("name" => 'should_fail',
+                                       "type" => 'numeric(8, 5)',
+                                       dump_query => true
+           );
+ERROR:  Unexpected brackets, please use char_length, numeric_prec_int, numeric_prec_frac parameters instead
+CONTEXT:  PL/pgSQL function pgvalid_create_validated_domain(text,text,boolean,boolean,boolean,boolean,boolean,boolean,text,integer,integer,numeric,numeric,text,integer,integer,integer,boolean,text) line 8 at RAISE
+SELECT *
+FROM registered_domains;
+    name     | schema | not_blank | html_escaped | is_num | is_alpha | is_alnum | is_email | regex | min_length | max_length | min | max |  type   | numeric_prec_int | numeric_prec_frac | char_length 
+-------------+--------+-----------+--------------+--------+----------+----------+----------+-------+------------+------------+-----+-----+---------+------------------+-------------------+-------------
+ test_domain | public | t         | t            | f      | f        | f        | f        |       |          3 |         64 |  -1 |  -1 | VARCHAR |               -1 |                -1 |          64
+ age         | public | t         | t            | f      | f        | f        | f        |       |         -1 |         -1 |  18 |  -1 | INT     |               -1 |                -1 |          64
+ email       | public | t         | t            | f      | f        | f        | t        |       |          3 |         64 |  -1 |  -1 | VARCHAR |               -1 |                -1 |          64
+ currency    | public | t         | t            | f      | f        | f        | f        |       |         -1 |         -1 |  18 |  -1 | NUMERIC |                8 |                 5 |          64
+(4 rows)
+
+SELECT pgvalid_drop_registered_domains_table();
+ pgvalid_drop_registered_domains_table 
+---------------------------------------
+ 
+(1 row)
+
+SELECT *
+FROM pg_tables
+WHERE tablename = 'registered_domains';
+ schemaname | tablename | tableowner | tablespace | hasindexes | hasrules | hastriggers | rowsecurity 
+------------+-----------+------------+------------+------------+----------+-------------+-------------
+(0 rows)
+
